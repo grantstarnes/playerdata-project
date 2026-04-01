@@ -1,0 +1,42 @@
+w_soc <- samp |>
+  filter(athlete_sport == "association_football",
+         athlete_gender_marker == "Female",
+         active_minutes >= 70)
+
+
+avgs <- w_soc |>
+  group_by(athlete_relative_age) |>
+  summarize(count = n(),
+            avg_total_distance_m = mean(total_distance_m),
+            avg_max_speed_kph = mean(max_speed_kph),
+            avg_session_load = mean(session_load),
+            sd_total_distance_m = sd(total_distance_m),
+            sd_max_speed_kph = sd(max_speed_kph),
+            sd_session_load = sd(session_load),
+            top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
+            bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
+            top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
+            bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
+            top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
+            bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
+            )
+
+w_soc <- w_soc |>
+  group_by(athlete_relative_age) |>
+  mutate(total_dist_perc_rank = percent_rank(total_distance_m) * 100,
+  max_speed_perc_rank = percent_rank(max_speed_kph) * 100,
+  session_load_perc_rank = percent_rank(session_load) * 100) |>
+  ungroup()
+
+w_soc_select <- w_soc |>
+  select(athlete_number,
+  athlete_relative_age,
+  active_minutes,
+  total_distance_m,
+  max_speed_kph,
+  session_load,
+  total_dist_perc_rank,
+  max_speed_perc_rank,
+  session_load_perc_rank)
+
+w_soc_select

@@ -1,0 +1,415 @@
+"""
+DE/app/app.py
+
+PlayerData Analytics Dashboard
+================================
+Streamlit app with sidebar filters (gender / sport / division / age / active
+minutes / data source) and four tabbed views:
+
+  Overview        - cohort-level KPIs and summary charts
+  Age Group       - DS-team metric comparisons across age brackets
+  Athlete         - individual athlete drilldown
+  Benchmarks      - cross-sport / cross-division comparison
+
+Run from DE/ with:
+    streamlit run app/app.py
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Make DE/ importable regardless of CWD
+_DE_ROOT = Path(__file__).resolve().parents[1]
+if str(_DE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_DE_ROOT))
+
+import pandas as pd
+import streamlit as st
+
+from pipeline.metrics import (
+    load_all_data,
+    build_athlete_metrics,
+    filter_sessions,
+    PERF_METRICS,
+)
+from pipeline import visuals as viz
+
+# ---------------------------------------------------------------------------
+# Page config
+# ---------------------------------------------------------------------------
+
+st.set_page_config(
+    page_title="PlayerData Analytics",
+    page_icon=None,
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ---------------------------------------------------------------------------
+# CSS overrides (dark theme)
+# ---------------------------------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+    .metric-card {
+        background: #1a1d27;
+        border-radius: 8px;
+        padding: 16px 20px;
+        text-align: center;
+    }
+    .metric-label { font-size: 0.78rem; color: #8892b0; margin-bottom: 4px; }
+    .metric-value { font-size: 1.6rem; font-weight: 700; color: #e0e4f0; }
+    .metric-delta { font-size: 0.75rem; color: #4cc9f0; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
+# Data loading (cached)
+# ---------------------------------------------------------------------------
+
+@st.cache_data(show_spinner="Loading data…")
+def get_data(include_synthetic: bool) -> pd.DataFrame:
+    return load_all_data(include_synthetic=include_synthetic)
+
+
+# ---------------------------------------------------------------------------
+# Sidebar - Filters
+# ---------------------------------------------------------------------------
+
+with st.sidebar:
+    st.title("PlayerData")
+    st.caption("Analytics Dashboard")
+    st.divider()
+
+    st.subheader("Data Source")
+    data_source = st.radio(
+        "Include synthetic data?",
+        options=["Sample + Synthetic", "Sample only", "Synthetic only"],
+        index=0,
+    )
+
+    # Load appropriate dataset
+    if data_source == "Sample only":
+        raw_df = get_data(include_synthetic=False)
+    else:
+        raw_df = get_data(include_synthetic=True)
+
+    if data_source == "Synthetic only":
+        raw_df = raw_df[raw_df["athlete_number"] >= 1000].copy()
+
+    st.divider()
+    st.subheader("Filters")
+
+    # Gender
+    genders = sorted(raw_df["athlete_gender_marker"].dropna().unique().tolist())
+    gender_labels = {g: g.title() for g in genders}
+    selected_gender = st.selectbox(
+        "Gender",
+        options=["All"] + genders,
+        format_func=lambda g: "All" if g == "All" else gender_labels.get(g, g),
+    )
+
+    # Sport
+    sports = sorted(raw_df["athlete_sport"].dropna().unique().tolist())
+    selected_sports = st.multiselect(
+        "Sport",
+        options=sports,
+        default=sports,
+        format_func=lambda s: s.replace("_", " ").title(),
+    )
+
+    # Division
+    divisions = sorted(raw_df["club_division"].dropna().unique().tolist())
+    selected_divisions = st.multiselect(
+        "Division",
+        options=divisions,
+        default=divisions,
+    )
+
+    # Age range
+    age_min = int(raw_df["athlete_relative_age"].min())
+    age_max = int(raw_df["athlete_relative_age"].max())
+    age_range = st.slider("Age Range", age_min, age_max, (age_min, age_max))
+
+    # Min active minutes (DS default = 70)
+    min_minutes = st.slider("Min Active Minutes", 0, 120, 70, step=5)
+
+    st.divider()
+    st.caption("Filters apply to all tabs except where noted.")
+
+
+# ---------------------------------------------------------------------------
+# Apply filters
+# ---------------------------------------------------------------------------
+
+def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
+    mask = (
+        df["athlete_relative_age"].between(age_range[0], age_range[1])
+        & df["athlete_sport"].isin(selected_sports if selected_sports else sports)
+        & df["club_division"].isin(selected_divisions if selected_divisions else divisions)
+        & (df["active_minutes"] >= min_minutes)
+    )
+    if selected_gender != "All":
+        mask &= df["athlete_gender_marker"] == selected_gender
+    return df[mask].copy()
+
+
+filtered_df = apply_filters(raw_df)
+
+# Build DS metrics on the filtered set
+_gender_arg = None if selected_gender == "All" else selected_gender
+athlete_df, summary_df = build_athlete_metrics(
+    filtered_df,
+    sport=None,       # sport already applied in apply_filters
+    gender=None,      # gender already applied
+    min_active_minutes=min_minutes,
+)
+
+
+# ---------------------------------------------------------------------------
+# Header
+# ---------------------------------------------------------------------------
+
+st.title("PlayerData Analytics Dashboard")
+col_h1, col_h2, col_h3, col_h4 = st.columns(4)
+
+def _kpi(container, label: str, value: str, delta: str = "") -> None:
+    container.markdown(
+        f"""<div class="metric-card">
+              <div class="metric-label">{label}</div>
+              <div class="metric-value">{value}</div>
+              <div class="metric-delta">{delta}</div>
+            </div>""",
+        unsafe_allow_html=True,
+    )
+
+n_sessions  = len(filtered_df)
+n_athletes  = filtered_df["athlete_number"].nunique() if n_sessions else 0
+avg_load    = filtered_df["session_load"].mean() if n_sessions else 0
+avg_dist    = filtered_df["total_distance_m"].mean() if n_sessions else 0
+
+_kpi(col_h1, "Sessions",        f"{n_sessions:,}")
+_kpi(col_h2, "Unique Athletes", f"{n_athletes:,}")
+_kpi(col_h3, "Avg Session Load", f"{avg_load:,.1f}")
+_kpi(col_h4, "Avg Total Dist (m)", f"{avg_dist:,.0f}")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+
+# ---------------------------------------------------------------------------
+# Tabs
+# ---------------------------------------------------------------------------
+
+tab_overview, tab_age, tab_athlete, tab_benchmark = st.tabs(
+    ["Overview", "Age Group (DS Metrics)", "Athlete Drilldown", "Benchmarks"]
+)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1 - Overview
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_overview:
+
+    if filtered_df.empty:
+        st.warning("No data matches the current filters.")
+    else:
+        c1, c2 = st.columns(2)
+
+        with c1:
+            st.plotly_chart(
+                viz.plot_session_load_distribution(filtered_df, group_by="athlete_sport"),
+                use_container_width=True,
+            )
+
+        with c2:
+            st.plotly_chart(
+                viz.plot_volume_vs_intensity(filtered_df, color_by="athlete_sport"),
+                use_container_width=True,
+            )
+
+        c3, c4 = st.columns(2)
+
+        with c3:
+            st.plotly_chart(
+                viz.plot_distance_breakdown(filtered_df, group_col="athlete_sport"),
+                use_container_width=True,
+            )
+
+        with c4:
+            st.plotly_chart(
+                viz.plot_speed_profile(filtered_df, color_by="athlete_gender_marker"),
+                use_container_width=True,
+            )
+
+        st.plotly_chart(
+            viz.plot_accel_decel_heatmap(filtered_df, group_col="athlete_sport"),
+            use_container_width=True,
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2 - Age Group (DS Metrics)
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_age:
+
+    st.markdown(
+        "**Source:** DS team pipeline (r_pipeline.txt) - "
+        "sessions filtered to `active_minutes ≥ {}`, then grouped by age.".format(min_minutes)
+    )
+
+    if summary_df.empty:
+        st.warning("Not enough data for age-group analysis with current filters.")
+    else:
+        metric_choice = st.selectbox(
+            "Metric",
+            options=PERF_METRICS,
+            format_func=lambda m: m.replace("_", " ").title(),
+            key="age_metric",
+        )
+
+        st.plotly_chart(
+            viz.plot_age_group_summary(summary_df, metric=metric_choice),
+            use_container_width=True,
+        )
+
+        st.plotly_chart(
+            viz.plot_age_metric_scatter(
+                athlete_df if not athlete_df.empty else filtered_df,
+                metric=metric_choice,
+                color_by="athlete_gender_marker",
+            ),
+            use_container_width=True,
+        )
+
+        st.subheader("Age-Group Summary Table (DS avgs)")
+        st.dataframe(
+            summary_df.style.format(precision=2),
+            use_container_width=True,
+            height=300,
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3 - Athlete Drilldown
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_athlete:
+
+    if filtered_df.empty:
+        st.warning("No data matches the current filters.")
+    else:
+        athlete_ids = sorted(filtered_df["athlete_number"].dropna().unique().tolist())
+        sel_athlete = st.selectbox(
+            "Select Athlete",
+            options=athlete_ids,
+            format_func=lambda x: f"Athlete #{int(x)}",
+        )
+
+        athlete_sessions = filtered_df[filtered_df["athlete_number"] == sel_athlete]
+
+        if athlete_sessions.empty:
+            st.warning("No sessions found for this athlete with current filters.")
+        else:
+            age = int(athlete_sessions["athlete_relative_age"].iloc[0])
+            sport = athlete_sessions["athlete_sport"].iloc[0].replace("_", " ").title()
+            gender = athlete_sessions["athlete_gender_marker"].iloc[0].title()
+            n_sess = len(athlete_sessions)
+
+            info_cols = st.columns(4)
+            _kpi(info_cols[0], "Age",     str(age))
+            _kpi(info_cols[1], "Sport",   sport)
+            _kpi(info_cols[2], "Gender",  gender)
+            _kpi(info_cols[3], "Sessions", str(n_sess))
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            c_left, c_right = st.columns([2, 1])
+
+            with c_left:
+                st.plotly_chart(
+                    viz.plot_athlete_sessions(filtered_df, athlete_id=sel_athlete),
+                    use_container_width=True,
+                )
+
+            with c_right:
+                # Percentile radar - use the ranked athlete_df row
+                ranked_rows = athlete_df[athlete_df["athlete_number"] == sel_athlete]
+                if not ranked_rows.empty:
+                    latest_row = ranked_rows.iloc[-1]
+                    st.plotly_chart(
+                        viz.plot_percentile_radar(latest_row),
+                        use_container_width=True,
+                    )
+                else:
+                    st.info("Percentile ranks not available (need ≥ 2 athletes in age group).")
+
+            st.subheader("Session Detail")
+            display_cols = [
+                "active_minutes", "total_distance_m", "max_speed_kph",
+                "session_load", "high_intensity_events", "sprint_events",
+                "acceleration_events", "deceleration_events",
+            ]
+            avail_cols = [c for c in display_cols if c in athlete_sessions.columns]
+            st.dataframe(
+                athlete_sessions[avail_cols].reset_index(drop=True).style.format(precision=2),
+                use_container_width=True,
+            )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 4 - Benchmarks
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_benchmark:
+
+    if filtered_df.empty:
+        st.warning("No data matches the current filters.")
+    else:
+        st.subheader("Sport Benchmark Heatmap")
+        st.plotly_chart(
+            viz.plot_sport_benchmark_heatmap(filtered_df),
+            use_container_width=True,
+        )
+
+        bench_col = st.selectbox(
+            "Breakdown by",
+            options=["athlete_sport", "club_division", "athlete_gender_marker"],
+            format_func=lambda c: c.replace("_", " ").title(),
+            key="bench_col",
+        )
+
+        c_b1, c_b2 = st.columns(2)
+
+        with c_b1:
+            st.plotly_chart(
+                viz.plot_session_load_distribution(filtered_df, group_by=bench_col,
+                                                   title=f"Session Load by {bench_col.replace('_',' ').title()}"),
+                use_container_width=True,
+            )
+
+        with c_b2:
+            st.plotly_chart(
+                viz.plot_distance_breakdown(filtered_df, group_col=bench_col,
+                                            title=f"Distance Breakdown by {bench_col.replace('_',' ').title()}"),
+                use_container_width=True,
+            )
+
+        st.plotly_chart(
+            viz.plot_accel_decel_heatmap(filtered_df, group_col=bench_col,
+                                         title=f"Accel/Decel by {bench_col.replace('_',' ').title()}"),
+            use_container_width=True,
+        )
+
+        st.subheader("Raw Data (filtered)")
+        st.dataframe(
+            filtered_df.reset_index(drop=True),
+            use_container_width=True,
+            height=350,
+        )
