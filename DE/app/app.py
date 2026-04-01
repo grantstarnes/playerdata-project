@@ -10,6 +10,7 @@ minutes / data source) and four tabbed views:
   Age Group       - DS-team metric comparisons across age brackets
   Athlete         - individual athlete drilldown
   Benchmarks      - cross-sport / cross-division comparison
+  Chat            - rule-based natural language Q&A
 
 Run from DE/ with:
     streamlit run app/app.py
@@ -25,8 +26,15 @@ _DE_ROOT = Path(__file__).resolve().parents[1]
 if str(_DE_ROOT) not in sys.path:
     sys.path.insert(0, str(_DE_ROOT))
 
+# Make DE/app/ importable so agent.py can be imported without triggering its UI
+_APP_DIR = Path(__file__).resolve().parent
+if str(_APP_DIR) not in sys.path:
+    sys.path.insert(0, str(_APP_DIR))
+
 import pandas as pd
 import streamlit as st
+
+from agent import _dispatch, _HELP_TEXT
 
 from pipeline.metrics import (
     load_all_data,
@@ -205,8 +213,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 # Tabs
 # ---------------------------------------------------------------------------
 
-tab_overview, tab_age, tab_athlete, tab_benchmark = st.tabs(
-    ["Overview", "Age Group (DS Metrics)", "Athlete Drilldown", "Benchmarks"]
+tab_overview, tab_age, tab_athlete, tab_benchmark, tab_chat = st.tabs(
+    ["Overview", "Age Group (DS Metrics)", "Athlete Drilldown", "Benchmarks", "Chat"]
 )
 
 
@@ -413,3 +421,66 @@ with tab_benchmark:
             use_container_width=True,
             height=350,
         )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 5 - Chat
+# ══════════════════════════════════════════════════════════════════════════════
+
+with tab_chat:
+
+    # Athlete selector (independent of the drilldown tab)
+    chat_col, _ = st.columns([1, 2])
+    with chat_col:
+        chat_athlete_ids = sorted(raw_df["athlete_number"].dropna().unique().tolist())
+        chat_sel_id = st.selectbox(
+            "Athlete context",
+            options=[None] + chat_athlete_ids,
+            format_func=lambda x: "No athlete selected" if x is None else f"Athlete #{int(x)}",
+            key="chat_athlete_sel",
+        )
+
+    if chat_sel_id is not None:
+        row = raw_df[raw_df["athlete_number"] == chat_sel_id].iloc[0]
+        st.caption(
+            f"Sport: {row['athlete_sport'].replace('_', ' ').title()} | "
+            f"Division: {row['club_division'].upper()} | "
+            f"Gender: {row['athlete_gender_marker'].title()} | "
+            f"Age: {int(row['athlete_relative_age'])}"
+        )
+
+    st.divider()
+
+    # Session state for chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # Welcome message on first load
+    if not st.session_state.chat_history:
+        with st.chat_message("assistant"):
+            st.markdown(_HELP_TEXT)
+
+    # Render conversation history
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    # Clear button
+    if st.button("Clear conversation", key="chat_clear"):
+        st.session_state.chat_history = []
+        st.rerun()
+
+    # Chat input
+    if user_input := st.chat_input("Ask about performance data...", key="chat_input"):
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+        response = _dispatch(
+            user_input,
+            int(chat_sel_id) if chat_sel_id is not None else None,
+        )
+
+        with st.chat_message("assistant"):
+            st.markdown(response)
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
