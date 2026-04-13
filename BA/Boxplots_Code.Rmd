@@ -1,0 +1,219 @@
+---
+title: "Visuals For Buddy April 8"
+output: html_document
+date: "2026-04-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+player_df <- read.csv("C:/Users/matth/Downloads/womens_aggregated_session.csv")
+sessions_df <- read.csv("C:/Users/matth/Downloads/womens_soccer_select.csv")
+```
+
+```{r}
+player_df$athlete_relative_age <- as.factor(player_df$athlete_relative_age)
+sessions_df$athlete_relative_age <- as.factor(sessions_df$athlete_relative_age)
+```
+
+```{r}
+ggplot(player_df, aes(x = athlete_relative_age, y = w_max_speed_kph, fill = athlete_relative_age)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Max Speed by Relative Age (Player Aggregated)",
+       x = "Relative Age",
+       y = "Max Speed (kph)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+### CLEAN BOXPLOTS FOR TOTAL DISTANCE
+
+# --- Create summary dataframe ---
+summary_df <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_total_distance, 0.25, na.rm = TRUE),
+    Median = median(w_total_distance, na.rm = TRUE),
+    Q3 = quantile(w_total_distance, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median for reference line ---
+overall_median <- median(player_df$w_total_distance, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_total_distance)) +
+  
+  # Boxplot
+  geom_boxplot(fill = "#4E79A7", width = 0.6, outlier.shape = NA) +
+  
+  # Overall median reference line
+  geom_hline(yintercept = overall_median, linetype = "dashed", color = "gray40") +
+  
+  # --- Labels ---
+  # Q1 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 0)),
+            size = 4, hjust = 1) +
+  
+  # Median (centered, emphasized)
+  geom_text(data = summary_df,
+            aes(x = x_pos, y = Median, label = round(Median, 0)),
+            size = 4.5, fontface = "bold", vjust = -0.5) +
+  
+  # Q3 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 0)),
+            size = 4, hjust = 1) +
+  
+  # Labels & theme
+  labs(
+    title = "Total Distance by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Total Distance (meters)"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+```{r}
+### CREATING CLEAN BOXPLOT OF SESSION LOAD WITH QUARTILE LABELS FOR PRESENTATION
+
+# --- Create summary dataframe ---
+summary_df <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_session_load, 0.25, na.rm = TRUE),
+    Median = median(w_session_load, na.rm = TRUE),
+    Q3 = quantile(w_session_load, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median for reference line ---
+overall_median <- median(player_df$w_session_load, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_session_load)) +
+  
+  # Boxplot
+  geom_boxplot(fill = "#4E79A7", width = 0.6, outlier.shape = NA) +
+  
+  # Overall median reference line
+  geom_hline(yintercept = overall_median, linetype = "dashed", color = "gray40") +
+  
+
+  # --- Labels ---
+  # Q1 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 1)),
+            size = 4, hjust = 1) +
+  
+  # Median (centered)
+  geom_text(data = summary_df,
+            aes(x = x_pos, y = Median, label = round(Median, 1)),
+            size = 4.5, fontface = "bold", vjust = -0.5) +
+  
+  # Q3 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 1)),
+            size = 4, hjust = 1) +
+  
+  # Labels & theme
+  labs(
+    title = "Session Load by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Session Load"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+```{r}
+plot_player_highlight <- function(player_id, metric, y_label) {
+  
+  highlight_df <- player_df %>%
+    filter(athlete_number == player_id)
+  
+  ggplot(player_df, aes(x = athlete_relative_age, y = .data[[metric]])) +
+    geom_boxplot(fill = "lightgray", alpha = 0.7) +
+    
+    geom_point(data = highlight_df,
+               aes(x = athlete_relative_age, y = .data[[metric]]),
+               color = "red", size = 4) +
+    
+    labs(title = paste(y_label, "- Athlete", player_id),
+         x = "Relative Age",
+         y = y_label) +
+    theme_minimal()
+}
+
+plot_player_highlight(1018, "w_max_speed_kph", "Max Speed (kph)")
+plot_player_highlight(1018, "w_total_distance", "Total Distance")
+plot_player_highlight(1018, "w_session_load", "Session Load")
+```
+
+```{r}
+set.seed(123)  # for reproducibility (optional)
+
+random_session <- sessions_df %>%
+  sample_n(1)
+
+random_session
+player_id <- random_session$athlete_number
+player_age <- random_session$athlete_relative_age
+player_speed <- random_session$max_speed_kph
+player_percentile <- random_session$max_speed_perc_rank
+
+ggplot(sessions_df, aes(x = athlete_relative_age, y = max_speed_kph)) +
+  geom_boxplot(fill = "lightgray", alpha = 0.7) +
+  
+  # highlight THIS session
+  geom_point(data = random_session,
+             aes(x = athlete_relative_age, y = max_speed_kph),
+             color = "red", size = 4) +
+  
+  geom_text(data = random_session,
+            aes(label = paste0("P", round(max_speed_perc_rank))),
+            vjust = -1.2,
+            color = "red") +
+  
+  labs(
+    title = paste("Session Max Speed Benchmark - Athlete", player_id),
+    subtitle = paste("Max Speed:", round(player_speed, 2), "kph | Percentile:", round(player_percentile), "%"),
+    x = "Relative Age",
+    y = "Max Speed (kph)"
+  ) +
+  
+  theme_minimal()
+```
+
+
+
+
+
