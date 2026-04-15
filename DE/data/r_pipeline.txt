@@ -1,3 +1,7 @@
+library(tidyverse)
+
+samp <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ4oZBg00Y9kg71OvLI6Md3hzmJuSf1GMUaih8tt2Opryf_NB30T8nHas_GY4RQ_q33jLXjNDcDNgE/pub?gid=1727941844&single=true&output=csv")
+
 w_soc <- samp |>
   filter(athlete_sport == "association_football",
          athlete_gender_marker == "Female",
@@ -11,15 +15,19 @@ avgs <- w_soc |>
             avg_total_distance_m = mean(total_distance_m),
             avg_max_speed_kph = mean(max_speed_kph),
             avg_session_load = mean(session_load),
+            avg_sprint_events = mean(sprint_events),
             sd_total_distance_m = sd(total_distance_m),
             sd_max_speed_kph = sd(max_speed_kph),
             sd_session_load = sd(session_load),
-            top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
-            bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
-            top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
-            bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
-            top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
-            bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
+            sd_sprint_events = sd(sprint_events),
+            #top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
+            #bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
+            #top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
+            #bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
+            #top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
+            #bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
+            top10_sprint_events = quantile(sprint_events, probs = 0.9, na.rm = T),
+            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T)
             )
 
 w_soc <- w_soc |>
@@ -40,8 +48,6 @@ w_soc_select <- w_soc |>
   max_speed_perc_rank,
   session_load_perc_rank)
 
-avgs
-
 # Weighted Averages
 
 weighted_avgs <- w_soc |>
@@ -61,15 +67,11 @@ weighted_avgs <- w_soc |>
             bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
             )
 
-weighted_avgs
-
 # Creating session_id
 
 w_soc_select_2 <- w_soc_select |>
   group_by(athlete_number) |>
   mutate(session_id = row_number())
-
-w_soc_select_2
 
 # Aggregating into Singular Row per Athlete
 
