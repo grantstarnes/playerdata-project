@@ -42,7 +42,9 @@ class Settings(BaseSettings):
     clerk_jwks_url: str = ""           # e.g. https://<subdomain>.clerk.accounts.dev/.well-known/jwks.json
     clerk_issuer: str = ""             # e.g. https://<subdomain>.clerk.accounts.dev
     clerk_audience: str | None = None  # optional — set if you configure audience in Clerk
+    clerk_secret_key: str = ""         # needed to resolve user_id -> email for allowlist enforcement
     auth_required: bool = Field(default=True, description="Disable with AUTH_REQUIRED=false for local dev")
+    allowlist_path: Path = BACKEND_ROOT / "allowlist.txt"
 
     @property
     def cors_origin_list(self) -> list[str]:

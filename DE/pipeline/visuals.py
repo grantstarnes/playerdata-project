@@ -25,23 +25,32 @@ from plotly.subplots import make_subplots
 # Shared palette / helpers
 # ---------------------------------------------------------------------------
 
-_PALETTE = px.colors.qualitative.Bold
-_BG = "#0e1117"
-_PAPER = "#1a1d27"
-_GRID = "#2d3043"
-_TEXT = "#ffffff"
+# PlayerData brand palette — mirrors --chart-1..6 in the design tokens
+_PALETTE = [
+    "#38D830",  # chart-1 PD green (primary series / your athlete)
+    "#4CC9F0",  # chart-2 cyan (cohort / comparison)
+    "#F72585",  # chart-3 fuchsia (negative deltas / decel)
+    "#7209B7",  # chart-4 purple (sprint distance)
+    "#FFB020",  # chart-5 amber (load spikes / warning)
+    "#0A0A0A",  # chart-6 near-black (emphasis / median line)
+]
+_BG = "#FFFFFF"       # plot surface
+_PAPER = "#FFFFFF"    # card surface
+_GRID = "#E5E7EA"     # pd-ink-100
+_TEXT = "#0A0A0A"     # pd-black
+_MUTED = "#6B7280"    # pd-ink-400
 
 _BASE_LAYOUT = dict(
     paper_bgcolor=_PAPER,
     plot_bgcolor=_BG,
-    font=dict(color=_TEXT, family="Inter, Arial, sans-serif", size=13),
-    xaxis=dict(gridcolor=_GRID, zerolinecolor=_GRID, tickfont=dict(color=_TEXT)),
-    yaxis=dict(gridcolor=_GRID, zerolinecolor=_GRID, tickfont=dict(color=_TEXT)),
+    font=dict(color=_TEXT, family="Inter, ui-sans-serif, system-ui, sans-serif", size=13),
+    xaxis=dict(gridcolor=_GRID, zerolinecolor=_GRID, tickfont=dict(color=_MUTED)),
+    yaxis=dict(gridcolor=_GRID, zerolinecolor=_GRID, tickfont=dict(color=_MUTED)),
     legend=dict(
-        font=dict(color=_TEXT, size=13),
+        font=dict(color=_TEXT, size=12),
         bgcolor="rgba(0,0,0,0)",
         bordercolor=_GRID,
-        borderwidth=1,
+        borderwidth=0,
         orientation="h",
         yanchor="top",
         y=-0.18,
@@ -305,8 +314,8 @@ def plot_percentile_radar(
         r=values_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(247,37,133,0.25)",
-        line=dict(color="#f72585", width=2),
+        fillcolor="rgba(56,216,48,0.22)",
+        line=dict(color="#38D830", width=2),
         name="Percentile",
     ))
 
@@ -315,10 +324,10 @@ def plot_percentile_radar(
             bgcolor=_BG,
             radialaxis=dict(
                 visible=True, range=[0, 100],
-                gridcolor=_GRID, tickcolor=_TEXT,
-                tickfont=dict(color=_TEXT),
+                gridcolor=_GRID, tickcolor=_MUTED,
+                tickfont=dict(color=_MUTED),
             ),
-            angularaxis=dict(gridcolor=_GRID, tickcolor=_TEXT, tickfont=dict(color=_TEXT)),
+            angularaxis=dict(gridcolor=_GRID, tickcolor=_MUTED, tickfont=dict(color=_TEXT)),
         ),
         showlegend=False,
     )

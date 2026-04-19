@@ -1,0 +1,14 @@
+# PlayerData email allowlist (template)
+#
+# Copy this file to `allowlist.txt` (same directory) and list allowed emails —
+# one per line. Lines starting with `#` and blank lines are ignored.
+# Comparisons are case-insensitive.
+#
+# Behavior:
+#   - allowlist.txt missing or empty  -> allowlist DISABLED (any signed-in user allowed)
+#   - allowlist.txt has >=1 entry     -> only those emails get past /api/*
+#
+# Changes are picked up on the next request (file mtime is watched — no restart needed).
+
+# coach1@school.edu
+# coach2@school.edu

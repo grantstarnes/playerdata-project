@@ -94,17 +94,18 @@ export function AgeTrend({
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number, name: string) => {
+              formatter={(v, name) => {
                 if (name === "_sd_lo" || name === "_sd_hi") {
                   return null as unknown as [string, string];
                 }
-                return [numberFmt(v) + unit, name];
+                return [numberFmt(Number(v)) + unit, String(name)];
               }}
             />
             <Legend
               verticalAlign="top"
               align="right"
               wrapperStyle={{ fontSize: 12, top: -4 }}
+              // @ts-expect-error Recharts 3 removed `payload` from Legend's typed Props but still honors it at runtime for static legends
               payload={[
                 { value: "Mean (±1 SD)", type: "line", color: "var(--pd-green)" },
                 { value: "90th pctile",  type: "line", color: "var(--chart-3)" },

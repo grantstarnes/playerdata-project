@@ -61,7 +61,7 @@ export function DistanceBreakdown({ data }: { data: Row[] }) {
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number) => v.toFixed(0) + " m"}
+              formatter={(v) => Number(v).toFixed(0) + " m"}
             />
             <Legend
               verticalAlign="top"
