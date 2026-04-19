@@ -110,7 +110,7 @@ export function CohortScatter({
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number, name: string) => [fmt(v), name]}
+              formatter={(v, name) => [fmt(Number(v)), String(name)]}
               labelFormatter={() => ""}
             />
             <Scatter

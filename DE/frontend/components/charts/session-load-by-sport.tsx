@@ -48,7 +48,7 @@ export function SessionLoadBySport({ data }: { data: BoxStat[] }) {
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number) => v.toFixed(1)}
+              formatter={(v) => Number(v).toFixed(1)}
             />
             <Bar dataKey="median" name="Median" fill="var(--pd-green)" radius={[0, 4, 4, 0]} />
           </BarChart>

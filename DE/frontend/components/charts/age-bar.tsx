@@ -66,7 +66,7 @@ export function AgeBar({ data, title }: { data: Row[]; title: string }) {
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number) => v.toFixed(2)}
+              formatter={(v) => Number(v).toFixed(2)}
             />
             <Legend
               verticalAlign="top"

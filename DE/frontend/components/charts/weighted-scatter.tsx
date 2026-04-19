@@ -93,9 +93,9 @@ export function WeightedScatter({ data }: { data: Point[] }) {
                 fontSize: 12,
                 boxShadow: "var(--shadow-sm)",
               }}
-              formatter={(v: number, name: string) => {
-                if (name === "Sessions") return [v, "Sessions"];
-                return [(typeof v === "number" ? v.toFixed(1) : v), name];
+              formatter={(v, name) => {
+                if (name === "Sessions") return [String(v ?? ""), "Sessions"];
+                return [typeof v === "number" ? v.toFixed(1) : String(v ?? ""), String(name)];
               }}
               labelFormatter={() => ""}
             />

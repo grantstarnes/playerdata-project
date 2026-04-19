@@ -37,7 +37,7 @@ export function AppBar() {
         <div className="ml-auto flex items-center gap-3">
           <span className="pd-badge pd-badge--live">LIVE · Gemma 4</span>
           <div className="pl-3" style={{ borderLeft: "1px solid var(--pd-ink-100)" }}>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
         </div>
       </div>
