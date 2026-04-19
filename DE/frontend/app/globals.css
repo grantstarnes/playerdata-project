@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   PlayerData design tokens
+   ========================================================================= */
+@theme inline {
+  /* Brand */
+  --color-pd-green:      #38D830;
+  --color-pd-green-600:  #2BB823;
+  --color-pd-green-700:  #1F9A19;
+  --color-pd-green-50:   #E8FAE6;
+
+  /* Neutrals */
+  --color-pd-black:      #0A0A0A;
+  --color-pd-ink-900:    #111418;
+  --color-pd-ink-700:    #2A2F36;
+  --color-pd-ink-500:    #4B5563;
+  --color-pd-ink-400:    #6B7280;
+  --color-pd-ink-300:    #9CA3AF;
+  --color-pd-ink-200:    #D1D5DB;
+  --color-pd-ink-100:    #E5E7EA;
+  --color-pd-ink-50:     #F0F2F4;
+  --color-pd-bg:         #F5F6F7;
+  --color-pd-surface:    #FFFFFF;
+
+  /* Status */
+  --color-pd-warn:       #FFB020;
+  --color-pd-error:      #E5484D;
+  --color-pd-info:       #4CC9F0;
+
+  /* Chart palette */
+  --color-chart-1:       #38D830;
+  --color-chart-2:       #4CC9F0;
+  --color-chart-3:       #F72585;
+  --color-chart-4:       #7209B7;
+  --color-chart-5:       #FFB020;
+  --color-chart-6:       #0A0A0A;
+
+  /* Fonts */
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --pd-green: #38D830;
+  --pd-green-600: #2BB823;
+  --pd-green-700: #1F9A19;
+  --pd-green-50: #E8FAE6;
+  --pd-green-ring: rgba(56,216,48,0.25);
+
+  --pd-black: #0A0A0A;
+  --pd-ink-900: #111418;
+  --pd-ink-700: #2A2F36;
+  --pd-ink-500: #4B5563;
+  --pd-ink-400: #6B7280;
+  --pd-ink-300: #9CA3AF;
+  --pd-ink-200: #D1D5DB;
+  --pd-ink-100: #E5E7EA;
+  --pd-ink-50:  #F0F2F4;
+  --pd-bg: #F5F6F7;
+  --pd-surface: #FFFFFF;
+
+  --fg-1: var(--pd-black);
+  --fg-2: var(--pd-ink-700);
+  --fg-3: var(--pd-ink-400);
+  --fg-4: var(--pd-ink-300);
+
+  --chart-1: var(--pd-green);
+  --chart-2: #4CC9F0;
+  --chart-3: #F72585;
+  --chart-4: #7209B7;
+  --chart-5: #FFB020;
+  --chart-6: var(--pd-black);
+  --chart-grid: var(--pd-ink-100);
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+
+  --shadow-xs: 0 1px 2px rgba(10,10,10,0.04);
+  --shadow-sm: 0 2px 8px rgba(10,10,10,0.06);
+  --shadow-md: 0 8px 24px rgba(10,10,10,0.08);
+  --shadow-focus: 0 0 0 3px var(--pd-green-ring);
+
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-body:    'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--pd-bg);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Tabular nums wherever numbers live */
+.num, th, td, .pd-kpi, .pd-metric, [data-tabular] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display headings */
+.pd-h1 { font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1.12; letter-spacing: -0.02em; color: var(--fg-1); margin: 0; }
+.pd-h2 { font-family: var(--font-display); font-weight: 700; font-size: 24px; line-height: 1.18; letter-spacing: -0.015em; color: var(--fg-1); margin: 0; }
+.pd-h3 { font-family: var(--font-display); font-weight: 600; font-size: 18px; line-height: 1.25; color: var(--fg-1); margin: 0; }
+
+.pd-kpi {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-kpi-unit {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--fg-3);
+  margin-left: 4px;
+}
+
+.pd-label-caps {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.pd-card {
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-ink-100);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 24px;
+}
+
+.pd-divider { height: 1px; background: var(--pd-ink-100); border: 0; margin: 16px 0; }
+
+/* Buttons */
+.pd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 120ms, color 120ms, border-color 120ms, box-shadow 120ms;
+  white-space: nowrap;
+}
+.pd-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.pd-btn--primary   { background: var(--pd-green); color: var(--pd-black); }
+.pd-btn--primary:hover  { background: var(--pd-green-600); }
+.pd-btn--primary:active { background: var(--pd-green-700); }
+.pd-btn--secondary { background: var(--pd-surface); color: var(--fg-1); border-color: var(--pd-ink-200); }
+.pd-btn--secondary:hover { background: var(--pd-ink-50); }
+.pd-btn--ghost     { background: transparent; color: var(--fg-2); }
+.pd-btn--ghost:hover { background: var(--pd-ink-50); color: var(--fg-1); }
+.pd-btn--sm { height: 32px; padding: 0 12px; font-size: 13px; border-radius: var(--r-sm); }
+
+/* Inputs */
+.pd-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-ink-200);
+  border-radius: var(--r-md);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.pd-input::placeholder { color: var(--fg-4); }
+.pd-input:focus { outline: none; border-color: var(--pd-green); box-shadow: var(--shadow-focus); }
+
+/* Badges */
+.pd-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  background: var(--pd-ink-50); color: var(--fg-2);
+}
+.pd-badge--live { background: var(--pd-black); color: #fff; }
+.pd-badge--live::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--pd-green); animation: pd-pulse 1.2s ease-in-out infinite;
+}
+.pd-badge--success { background: var(--pd-green-50); color: var(--pd-green-700); }
+
+@keyframes pd-pulse {
+  0%, 100% { transform: scale(0.85); opacity: 0.6; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
