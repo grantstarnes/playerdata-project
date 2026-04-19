@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Env / secrets (double-belt — subdirs already have their own .gitignore)
+.env
+.env.local
+*.env.local
+
+# Build artifacts / IDE
+.DS_Store
+.vscode/
+.idea/
+.next/
+node_modules/
+
+# Local scratch
+*.log
+*.tmp
