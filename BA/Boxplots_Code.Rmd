@@ -93,6 +93,212 @@ ggplot(player_df, aes(x = athlete_relative_age, y = w_total_distance)) +
 ```
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+
+# --- Create summary dataframe ---
+summary_df <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_total_distance, 0.25, na.rm = TRUE),
+    Median = median(w_total_distance, na.rm = TRUE),
+    Q3 = quantile(w_total_distance, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median ---
+overall_median <- median(player_df$w_total_distance, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_total_distance)) +
+  
+  # Boxplot (slightly stronger fill for contrast with white text)
+  geom_boxplot(fill = "#4E79A7", alpha = 0.7, width = 0.6, outlier.shape = NA) +
+  
+  # Overall median reference line
+  geom_hline(yintercept = overall_median,
+             linetype = "dashed", color = "gray50") +
+  
+  # --- Quartile labels ---
+  # Q1 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 0)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median (centered, white, below line)
+  geom_text(data = summary_df,
+            aes(x = x_pos, y = Median, label = round(Median, 0)),
+            size = 4.5, fontface = "bold",
+            vjust = 1.2,
+            color = "white") +
+  
+  # Q3 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 0)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Labels
+  labs(
+    title = "Total Distance by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Total Distance (meters)"
+  ) +
+  
+  # Theme
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14),
+    
+    # Larger axis text for presentation
+    axis.text.x = element_text(size = 16, face = "bold"),
+    axis.text.y = element_text(size = 15),
+    
+    # Axis titles
+    axis.title.x = element_text(size = 17, face = "bold"),
+    axis.title.y = element_text(size = 17, face = "bold"),
+    
+    # Clean grid
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# --- Create summary dataframe ---
+summary_df_speed <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_max_speed_kph, 0.25, na.rm = TRUE),
+    Median = median(w_max_speed_kph, na.rm = TRUE),
+    Q3 = quantile(w_max_speed_kph, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median ---
+overall_median_speed <- median(player_df$w_max_speed_kph, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_max_speed_kph)) +
+  
+  geom_boxplot(fill = "#4E79A7", alpha = 0.7, width = 0.6, outlier.shape = NA) +
+  
+  geom_hline(yintercept = overall_median_speed,
+             linetype = "dashed", color = "gray50") +
+  
+  # Q1
+  geom_text(data = summary_df_speed,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median
+  geom_text(data = summary_df_speed,
+            aes(x = x_pos, y = Median, label = round(Median, 1)),
+            size = 4.5, fontface = "bold",
+            vjust = 1.2,
+            color = "white") +
+  
+  # Q3
+  geom_text(data = summary_df_speed,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Max Speed by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Max Speed (kph)"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14),
+    axis.text.x = element_text(size = 16, face = "bold"),
+    axis.text.y = element_text(size = 15),
+    axis.title.x = element_text(size = 17, face = "bold"),
+    axis.title.y = element_text(size = 17, face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+```{r}
+# --- Create summary dataframe ---
+summary_df_load <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_session_load, 0.25, na.rm = TRUE),
+    Median = median(w_session_load, na.rm = TRUE),
+    Q3 = quantile(w_session_load, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median ---
+overall_median_load <- median(player_df$w_session_load, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_session_load)) +
+  
+  geom_boxplot(fill = "#4E79A7", alpha = 0.7, width = 0.6, outlier.shape = NA) +
+  
+  geom_hline(yintercept = overall_median_load,
+             linetype = "dashed", color = "gray50") +
+  
+  # Q1
+  geom_text(data = summary_df_load,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median
+  geom_text(data = summary_df_load,
+            aes(x = x_pos, y = Median, label = round(Median, 1)),
+            size = 4.5, fontface = "bold",
+            vjust = 1.2,
+            color = "white") +
+  
+  # Q3
+  geom_text(data = summary_df_load,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Session Load by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Session Load"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18),
+    plot.subtitle = element_text(size = 14),
+    axis.text.x = element_text(size = 16, face = "bold"),
+    axis.text.y = element_text(size = 15),
+    axis.title.x = element_text(size = 17, face = "bold"),
+    axis.title.y = element_text(size = 17, face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
+
+
+```{r}
 ### CREATING CLEAN BOXPLOT OF SESSION LOAD WITH QUARTILE LABELS FOR PRESENTATION
 
 # --- Create summary dataframe ---
@@ -152,6 +358,68 @@ ggplot(player_df, aes(x = athlete_relative_age, y = w_session_load)) +
     panel.grid.minor = element_blank()
   )
 ```
+
+```{r}
+### CREATING CLEAN BOXPLOT OF TOP SPEED WITH QUARTILE LABELS FOR PRESENTATION
+
+# --- Create summary dataframe ---
+summary_df <- player_df %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_max_speed_kph, 0.25, na.rm = TRUE),
+    Median = median(w_max_speed_kph, na.rm = TRUE),
+    Q3 = quantile(w_max_speed_kph, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+# --- Overall median for reference line ---
+overall_median <- median(player_df$w_max_speed_kph, na.rm = TRUE)
+
+# --- Plot ---
+ggplot(player_df, aes(x = athlete_relative_age, y = w_max_speed_kph)) +
+  
+  # Boxplot
+  geom_boxplot(fill = "#4E79A7", width = 0.6, outlier.shape = NA) +
+  
+  # Overall median reference line
+  geom_hline(yintercept = overall_median, linetype = "dashed", color = "gray40") +
+  
+
+  # --- Labels ---
+  # Q1 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q1, label = round(Q1, 1)),
+            size = 5, hjust = 1) +
+  
+  # Median (centered)
+  geom_text(data = summary_df,
+            aes(x = x_pos, y = Median, label = round(Median, 1)),
+            size = 5.5, fontface = "bold", vjust = -0.5) +
+  
+  # Q3 (left)
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.35, y = Q3, label = round(Q3, 1)),
+            size = 5, hjust = 1) +
+  
+  # Labels & theme
+  labs(
+    title = "Weighted Max Speed by Relative Age",
+    subtitle = "Quartiles and median shown; dashed line = overall median",
+    x = "Age",
+    y = "Top Speed (kph)"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+```
+
 
 
 ```{r}
@@ -213,7 +481,314 @@ ggplot(sessions_df, aes(x = athlete_relative_age, y = max_speed_kph)) +
   theme_minimal()
 ```
 
+# FINAL UPDATED BOXPLOTS
+
+```{r}
+### TOTAL DISTANCE
+
+ggplot(player_df, aes(x = athlete_relative_age, y = w_total_distance)) +
+  
+  geom_boxplot(
+    fill = "#4E79A7",
+    alpha = 0.6,
+    width = 0.6,
+    outlier.shape = NA,
+    color = "black",
+    size = 0.8
+  ) +
+  
+  # Q1
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.4, y = Q1,
+                label = paste0(scales::comma(round(Q1, 0)), " m")),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median
+  geom_label(data = summary_df,
+             aes(x = x_pos, y = Median,
+                 label = paste0(scales::comma(round(Median, 0)), " m")),
+             size = 4.8,
+             fontface = "bold",
+             fill = "white",
+             color = "black",
+             label.size = 0) +
+  
+  # Q3
+  geom_text(data = summary_df,
+            aes(x = x_pos - 0.4, y = Q3,
+                label = paste0(scales::comma(round(Q3, 0)), " m")),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Average Total Distance Covered by Age",
+    x = "Age",
+    y = "Total Distance (meters)",
+    caption = "Boxes show cut-offs for 25th and 75th percentiles; center label = median"
+  ) +
+  
+  scale_x_discrete(expand = expansion(add = 0.6)) +
+  scale_y_continuous(labels = scales::comma) +
+  
+  coord_cartesian(clip = "off") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 20),
+    
+    axis.text.x = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 16),
+    axis.title.x = element_text(size = 18, face = "bold"),
+    axis.title.y = element_text(size = 18, face = "bold"),
+    
+    panel.grid.major.y = element_line(color = "gray85", size = 0.3),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    
+    # Improved caption
+    plot.caption = element_text(
+      size = 12,
+      color = "gray30",
+      hjust = 0,
+      margin = margin(t = 10)
+    ),
+    
+    plot.margin = margin(t = 10, r = 20, b = 10, l = 40)
+  )
+```
+
+```{r}
+### Session Load
+library(scales)
+
+ggplot(player_df, aes(x = athlete_relative_age, y = w_session_load)) +
+  
+  geom_boxplot(
+    fill = "#4E79A7",
+    alpha = 0.6,
+    width = 0.6,
+    outlier.shape = NA,
+    color = "black",
+    size = 0.8
+  ) +
+  
+  # Q1
+  geom_text(data = summary_df_load,
+            aes(x = x_pos - 0.4, y = Q1,
+                label = round(Q1, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median (highlighted)
+  geom_label(data = summary_df_load,
+             aes(x = x_pos, y = Median,
+                 label = round(Median, 1)),
+             size = 4.8,
+             fontface = "bold",
+             fill = "white",
+             color = "black",
+             label.size = 0) +
+  
+  # Q3
+  geom_text(data = summary_df_load,
+            aes(x = x_pos - 0.4, y = Q3,
+                label = round(Q3, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Average Session Load by Age",
+    x = "Age",
+    y = "Session Load",
+    caption = "Boxes show cut-offs for 25th and 75th percentiles; center label = median"
+  ) +
+  
+  scale_x_discrete(expand = expansion(add = 0.6)) +
+  
+  coord_cartesian(clip = "off") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 20),
+    
+    axis.text.x = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 16),
+    axis.title.x = element_text(size = 18, face = "bold"),
+    axis.title.y = element_text(size = 18, face = "bold"),
+    
+    panel.grid.major.y = element_line(color = "gray85", size = 0.3),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    
+    plot.caption = element_text(
+      size = 12,
+      color = "gray30",
+      hjust = 0,
+      margin = margin(t = 10)
+    ),
+    
+    plot.margin = margin(t = 10, r = 20, b = 10, l = 40)
+  )
+```
+
+```{r}
+### Top Speed
+
+library(scales)
+
+ggplot(player_df, aes(x = athlete_relative_age, y = w_max_speed_kph)) +
+  
+  geom_boxplot(
+    fill = "#4E79A7",
+    alpha = 0.6,
+    width = 0.6,
+    outlier.shape = NA,
+    color = "black",
+    size = 0.8
+  ) +
+  
+  # Q1
+  geom_text(data = summary_df_speed,
+            aes(x = x_pos - 0.4, y = Q1,
+                label = paste0(round(Q1, 1), " kph")),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median (highlighted)
+  geom_label(data = summary_df_speed,
+             aes(x = x_pos, y = Median,
+                 label = paste0(round(Median, 1), " kph")),
+             size = 4.8,
+             fontface = "bold",
+             fill = "white",
+             color = "black",
+             label.size = 0) +
+  
+  # Q3
+  geom_text(data = summary_df_speed,
+            aes(x = x_pos - 0.4, y = Q3,
+                label = paste0(round(Q3, 1), " kph")),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Average Top Speed by Age",
+    x = "Age",
+    y = "Top Speed (kph)",
+    caption = "Boxes show cut-offs for 25th and 75th percentiles; center label = median"
+  ) +
+  
+  scale_x_discrete(expand = expansion(add = 0.6)) +
+  
+  coord_cartesian(clip = "off") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 20),
+    
+    axis.text.x = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 16),
+    axis.title.x = element_text(size = 18, face = "bold"),
+    axis.title.y = element_text(size = 18, face = "bold"),
+    
+    panel.grid.major.y = element_line(color = "gray85", size = 0.3),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    
+    plot.caption = element_text(
+      size = 12,
+      color = "gray30",
+      hjust = 0,
+      margin = margin(t = 10)
+    ),
+    
+    plot.margin = margin(t = 10, r = 20, b = 10, l = 40)
+  )
+```
 
 
+```{r}
+### Summarizing sprint events
+df_with_sprint_events <- read.csv("C:/Users/matth/Downloads/weighted_aggregated_ranks.csv")
+
+summary_df_sprint <- df_with_sprint_events %>%
+  group_by(athlete_relative_age) %>%
+  summarise(
+    Q1 = quantile(w_sprint_events, 0.25, na.rm = TRUE),
+    Median = median(w_sprint_events, na.rm = TRUE),
+    Q3 = quantile(w_sprint_events, 0.75, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    x_pos = as.numeric(factor(athlete_relative_age))
+  )
+
+
+```
+
+```{r}
+### Sprint Events Plot
+ggplot(df_with_sprint_events, aes(x = as.factor(athlete_relative_age), y = w_sprint_events)) +
+  
+  geom_boxplot(
+    fill = "#4E79A7",
+    alpha = 0.6,
+    width = 0.6,
+    outlier.shape = NA,
+    color = "black",
+    size = 0.8
+  ) +
+  
+  # Q1
+  geom_text(data = summary_df_sprint,
+            aes(x = x_pos - 0.4, y = Q1,
+                label = round(Q1, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  # Median (highlighted)
+  geom_label(data = summary_df_sprint,
+             aes(x = x_pos, y = Median,
+                 label = round(Median, 1)),
+             size = 4.8,
+             fontface = "bold",
+             fill = "white",
+             color = "black",
+             label.size = 0) +
+  
+  # Q3
+  geom_text(data = summary_df_sprint,
+            aes(x = x_pos - 0.4, y = Q3,
+                label = round(Q3, 1)),
+            size = 4, hjust = 1, color = "gray30") +
+  
+  labs(
+    title = "Average Sprint Events by Age",
+    x = "Age",
+    y = "Sprint Events",
+    caption = "Boxes show cut-offs for 25th and 75th percentiles; center label = median"
+  ) +
+  
+  scale_x_discrete(expand = expansion(add = 0.6)) +
+  
+  coord_cartesian(clip = "off") +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 20),
+    
+    axis.text.x = element_text(size = 18, face = "bold"),
+    axis.text.y = element_text(size = 16),
+    axis.title.x = element_text(size = 18, face = "bold"),
+    axis.title.y = element_text(size = 18, face = "bold"),
+    
+    panel.grid.major.y = element_line(color = "gray85", size = 0.3),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    
+    plot.caption = element_text(
+      size = 12,
+      color = "gray30",
+      hjust = 0,
+      margin = margin(t = 10)
+    ),
+    
+    plot.margin = margin(t = 10, r = 20, b = 10, l = 40)
+  )
+```
 
 
