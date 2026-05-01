@@ -51,7 +51,8 @@ export function AthleteDrilldownPanel({
 
   const s = detail.stats;
   const totalDistance = s.total_distance_m?.max ?? 0;
-  const maxSpeed      = s.max_speed_kph?.max   ?? 0;
+  // P95 across this athlete's sessions — robust to single-session GPS spikes.
+  const maxSpeed      = s.max_speed_kph?.p95   ?? 0;
   const sessionLoad   = s.session_load?.avg    ?? 0;
 
   return (
@@ -142,7 +143,7 @@ export function AthleteDrilldownPanel({
               label="Max Speed"
               value={maxSpeed.toFixed(1)}
               unit=" km/h"
-              caption="PB · Session Date"
+              caption="Peak (P95) across sessions"
               pctBadge={p.max_speed_perc_rank}
             />
             <DrillKpi

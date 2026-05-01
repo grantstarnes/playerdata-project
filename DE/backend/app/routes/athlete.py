@@ -170,6 +170,7 @@ def athlete_detail(
                     "avg": round(float(col.mean()), 2),
                     "max": round(float(col.max()), 2),
                     "min": round(float(col.min()), 2),
+                    "p95": round(float(col.quantile(0.95)), 2),
                 }
 
     from app.pipeline.metrics import RANK_COL_MAP

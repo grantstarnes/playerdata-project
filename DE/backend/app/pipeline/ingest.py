@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
 
+log = logging.getLogger(__name__)
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT_PATH = ROOT_DIR / "data" / "raw" / "sample_data.csv"
+
+# Anything above this is treated as a GPS spike, not a real top speed.
+# Reference: elite male sprinters peak ~36 km/h; Bolt's 100m peak was ~44 km/h.
+# College/club athletes regularly logging >36 km/h is almost always a tracker artifact.
+MAX_PLAUSIBLE_SPEED_KPH = 36.0
 
 REQUIRED_COLUMNS: List[str] = [
 	"athlete_number",
@@ -86,6 +94,20 @@ def _clean_strings(df: pd.DataFrame) -> pd.DataFrame:
 	return df
 
 
+def _cap_implausible_speeds(df: pd.DataFrame) -> pd.DataFrame:
+	"""Null out max_speed_kph (and the derived %-of-max) when the reading is
+	above human-plausible. Keeps the row's other metrics intact so distance,
+	load, accel, etc. still contribute to the cohort.
+	"""
+	mask = df["max_speed_kph"] > MAX_PLAUSIBLE_SPEED_KPH
+	n = int(mask.sum())
+	if n:
+		df.loc[mask, "max_speed_kph"] = pd.NA
+		df.loc[mask, "percentage_max_speed_kph"] = pd.NA
+		log.info("ingest: capped %d row(s) with max_speed_kph > %.1f", n, MAX_PLAUSIBLE_SPEED_KPH)
+	return df
+
+
 def ingest_data(input_path: str | Path = DEFAULT_INPUT_PATH) -> pd.DataFrame:
 	"""Read raw athlete session data and return a cleaned, schema-validated dataframe."""
 	path = Path(input_path)
@@ -97,7 +119,10 @@ def ingest_data(input_path: str | Path = DEFAULT_INPUT_PATH) -> pd.DataFrame:
 	cleaned_df = _coerce_numeric_columns(cleaned_df)
 	cleaned_df = _clean_strings(cleaned_df)
 
+	# dropna first (legit-missing rows go), then cap implausible speeds —
+	# capping AFTER dropna so flagged rows survive with just the speed nulled.
 	cleaned_df = cleaned_df.dropna(subset=REQUIRED_COLUMNS)
+	cleaned_df = _cap_implausible_speeds(cleaned_df)
 	cleaned_df = cleaned_df.drop_duplicates().reset_index(drop=True)
 
 	return cleaned_df

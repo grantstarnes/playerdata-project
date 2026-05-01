@@ -119,7 +119,7 @@ export type AthleteRow = {
 
 export type AthleteDetail = AthleteRow & {
   session_count: number;
-  stats: Record<string, { avg: number; max: number; min: number }>;
+  stats: Record<string, { avg: number; max: number; min: number; p95: number }>;
   percentiles: Record<string, number>;
   timeline: Array<Record<string, number | null>>;
 };
