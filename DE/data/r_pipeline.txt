@@ -20,14 +20,23 @@ avgs <- w_soc |>
             sd_max_speed_kph = sd(max_speed_kph),
             sd_session_load = sd(session_load),
             sd_sprint_events = sd(sprint_events),
-            #top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
-            #bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
-            #top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
-            #bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
-            #top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
-            #bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
+            top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
+            bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
+            top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
+            bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
+            top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
+            bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
             top10_sprint_events = quantile(sprint_events, probs = 0.9, na.rm = T),
-            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T)
+            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T),
+            max_total_distance_m = max(total_distance_m),
+            min_total_distance_m = min(total_distance_m),
+            max_session_load = max(session_load),
+            min_session_load = min(session_load),
+            max_max_speed_kph = max(max_speed_kph),
+            min_max_speed_kph = min(max_speed_kph),
+            max_sprint_events = max(sprint_events),
+            min_sprint_events = min(sprint_events)
+
             )
 
 w_soc <- w_soc |>
@@ -44,6 +53,7 @@ w_soc_select <- w_soc |>
   total_distance_m,
   max_speed_kph,
   session_load,
+  sprint_events,
   total_dist_perc_rank,
   max_speed_perc_rank,
   session_load_perc_rank)
@@ -56,39 +66,39 @@ weighted_avgs <- w_soc |>
             weighted_avg_total_distance_m = weighted.mean(total_distance_m, active_minutes),
             weighted_avg_max_speed_kph = weighted.mean(max_speed_kph, active_minutes),
             weighted_avg_session_load = weighted.mean(session_load, active_minutes),
+            weighted_avg_sprint_events = weighted.mean(sprint_events, active_minutes),
             sd_total_distance_m = sd(total_distance_m),
             sd_max_speed_kph = sd(max_speed_kph),
             sd_session_load = sd(session_load),
+            sd_sprint_events = sd(sprint_events),
             top10_t_dist = quantile(total_distance_m, probs = 0.9, na.rm = T),
             bottom10_t_dist = quantile(total_distance_m, probs = 0.1, na.rm = T),
             top10_max_speed_kph = quantile(max_speed_kph, probs = 0.9, na.rm = T),
             bottom10_max_speed_kph = quantile(max_speed_kph, probs = 0.1, na.rm = T),
             top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
             bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
+            top10_sprint_events = quantile(sprint_events, probs = 0.9, na.rm = T),
+            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T),
             )
-
-# Creating session_id
 
 w_soc_select_2 <- w_soc_select |>
   group_by(athlete_number) |>
   mutate(session_id = row_number())
-
-# Aggregating into Singular Row per Athlete
 
 weighted_avg_ath <- w_soc_select_2 |>
   group_by(athlete_number, athlete_relative_age) |>
   summarise(
     w_total_distance = weighted.mean(total_distance_m, active_minutes),
     w_session_load   = weighted.mean(session_load, active_minutes),
-    w_max_speed_kph = weighted.mean(max_speed_kph, active_minutes)
+    w_max_speed_kph = weighted.mean(max_speed_kph, active_minutes),
+    w_sprint_events = weighted.mean(sprint_events, active_minutes)
   )
 
-weighted_avg_ath <- weighted_avg_ath |>
+weighted_aggregated <- weighted_avg_ath |>
   group_by(athlete_relative_age) |>
   mutate(total_dist_perc_rank = percent_rank(w_total_distance) * 100,
   max_speed_perc_rank = percent_rank(w_max_speed_kph) * 100,
   session_load_perc_rank = percent_rank(w_session_load) * 100,
+  sprint_events_perc_rank = percent_rank(w_sprint_events) * 100,
   num_sessions = n()) |>
   ungroup()
-
-  weighted_avg_ath
