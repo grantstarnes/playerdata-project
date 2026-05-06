@@ -5,7 +5,8 @@ samp <- read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ4oZBg00Y9kg
 w_soc <- samp |>
   filter(athlete_sport == "association_football",
          athlete_gender_marker == "Female",
-         active_minutes >= 70)
+         active_minutes >= 70,
+         max_speed_kph < 35)
 
 # Non-Weighted Averages
 
@@ -36,7 +37,6 @@ avgs <- w_soc |>
             min_max_speed_kph = min(max_speed_kph),
             max_sprint_events = max(sprint_events),
             min_sprint_events = min(sprint_events)
-
             )
 
 w_soc <- w_soc |>
@@ -78,8 +78,10 @@ weighted_avgs <- w_soc |>
             top10_session_load = quantile(session_load, probs = 0.9, na.rm = T),
             bottom10_session_load = quantile(session_load, probs = 0.1, na.rm = T),
             top10_sprint_events = quantile(sprint_events, probs = 0.9, na.rm = T),
-            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T),
+            bottom10_sprint_events = quantile(sprint_events, probs = 0.1, na.rm = T)
             )
+
+weighted_avgs
 
 w_soc_select_2 <- w_soc_select |>
   group_by(athlete_number) |>
@@ -102,3 +104,5 @@ weighted_aggregated <- weighted_avg_ath |>
   sprint_events_perc_rank = percent_rank(w_sprint_events) * 100,
   num_sessions = n()) |>
   ungroup()
+
+weighted_avg_ath
